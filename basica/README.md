@@ -1,123 +1,133 @@
-# Laboratorio 1A - Modelado documental (Parte obligatoria)
+# Laboratorio 1A - Modelado documental (Parte basica)
 
 ## Objetivo
-Diseñar un modelo documental para un portal de e-learning orientado a programación, optimizado para lectura en:
+Disenar un modelo documental para un portal de e-learning orientado a programacion, optimizado para lectura en:
 
-- Home con listados por categoría.
-- Página de curso (curso + temario de vídeos).
-- Página de lección (vídeo + autor).
-- Página de autor (consulta menos frecuente).
+- Inicio con listados por categoria.
+- Pagina de curso (curso + temario de videos).
+- Pagina de leccion (video + autor).
+- Pagina de autor (consulta menos frecuente).
 
 ## Colecciones
 
 ### `categories`
-Catálogo de áreas (Front End, Backend, Devops, Otros).
+Catalogo de areas (Front End, Backend, DevOps, Otros).
 
 Campos principales:
 - `_id`
-- `slug` (único)
-- `name`
-- `createdAt`, `updatedAt`
+- `slug` (unico)
+- `nombre`
+- `creadoEn`, `actualizadoEn`
 
 ### `authors`
-Información del autor y su biografía (poco tráfico comparado con curso/lección).
+Informacion del autor y su biografia (poco trafico comparado con curso/leccion).
 
 Campos principales:
 - `_id`
-- `slug` (único)
-- `displayName`
-- `shortBio`
-- `avatarUrl`
-- `socialLinks[]`
-- `createdAt`, `updatedAt`
+- `slug` (unico)
+- `nombreMostrado`
+- `bioCorta`
+- `urlAvatar`
+- `enlacesSociales[]`
+- `creadoEn`, `actualizadoEn`
 
 ### `courses`
-Documento agregado principal. Incluye metadatos del curso y vídeos embebidos.
+Documento agregado principal. Incluye metadatos del curso y videos embebidos.
 
 Campos principales:
 - `_id`
-- `slug` (único)
-- `title`
-- `shortDescription`
+- `slug` (unico)
+- `titulo`
+- `descripcionCorta`
 - `level`
-- `categoryId` (ref -> `categories._id`)
-- `authorIds[]` (refs -> `authors._id`)
-- `courseContentCmsId` (GUID/ID en CMS)
-- `publishedAt`
+- `idCategoria` (ref -> `categories._id`)
+- `idContenidoCursoCms` (GUID/ID en CMS)
+- `publicadoEn`
 - `videos[]` (subdocumentos embebidos)
-- `createdAt`, `updatedAt`
+- `creadoEn`, `actualizadoEn`
+
+### `cursosAutores`
+Coleccion intermedia para resolver la relacion entre cursos y autores sin M:M directa.
+
+Campos principales:
+- `_id`
+- `idCurso` (ref -> `courses._id`)
+- `idAutor` (ref -> `authors._id`)
+- `rol`
+- `creadoEn`
 
 Subdocumento `videos[]`:
 - `_id`
-- `order`
+- `orden`
 - `slug`
-- `title`
-- `summary`
-- `authorId` (ref -> `authors._id`)
-- `videoAssetId` (GUID/URL en S3 o CDN)
-- `articleContentCmsId` (ID de contenido en CMS)
-- `publishedAt`
-- `durationSec`
-- `isPublished`
+- `titulo`
+- `resumen`
+- `idAutor` (ref -> `authors._id`)
+- `idRecursoVideo` (GUID/URL en S3 o CDN)
+- `idContenidoArticuloCms` (ID de contenido en CMS)
+- `publicadoEn`
+- `duracionSeg`
+- `estaPublicado`
 
-## Patrón de modelado y justificación
+## Patron de modelado y justificacion
 
 ### Embebido en `courses.videos[]`
-Se aplica embebido para vídeo/lección porque:
-- Un vídeo no se comparte entre cursos (según enunciado).
-- La lectura "curso con sus vídeos" es muy frecuente.
-- El máximo de vídeos por curso es bajo (1..20), encaja perfectamente en un documento.
+Se aplica embebido para video/leccion porque:
+- Un video no se comparte entre cursos (segun enunciado).
+- La lectura "curso con sus videos" es muy frecuente.
+- El maximo de videos por curso es bajo (1..20), encaja perfectamente en un documento.
 
-### Referencias a `authors` y `categories`
+### Referencias a `authors`, `categories` y `cursosAutores`
 Se referencian entidades compartidas y con ciclo de vida propio:
-- `authors` se usa en varios cursos y páginas de autor.
-- `categories` se reutiliza para filtros/listados.
+- `authors` se usa en varios cursos y paginas de autor.
+- `categories` se reutiliza para filtros y listados.
+- `cursosAutores` actua como tabla intermedia para vincular curso y autor.
 
 ### Recursos externos (S3/CMS)
-Se guardan IDs de recursos (`videoAssetId`, `articleContentCmsId`, `courseContentCmsId`) y no el contenido binario/texto largo, cumpliendo el enunciado.
+Se guardan IDs de recursos (`idRecursoVideo`, `idContenidoArticuloCms`, `idContenidoCursoCms`) y no el contenido binario o texto largo, cumpliendo el enunciado.
 
-## Consultas objetivo (parte obligatoria)
+## Consultas objetivo (parte basica)
 
-1. **Últimos cursos publicados**
-- Colección: `courses`
-- Filtro: `publishedAt <= now`
-- Orden: `publishedAt DESC`
-- Límite: N
+1. **Ultimos cursos publicados**
+- Coleccion: `courses`
+- Filtro: `publicadoEn <= now`
+- Orden: `publicadoEn DESC`
+- Limite: N
 
-2. **Cursos por área**
-- Colección: `courses`
-- Filtro: `categoryId = ...`
-- Orden recomendado: `publishedAt DESC`
+2. **Cursos por area**
+- Coleccion: `courses`
+- Filtro: `idCategoria = ...`
+- Orden recomendado: `publicadoEn DESC`
 
-3. **Curso con sus vídeos**
-- Colección: `courses`
+3. **Curso con sus videos**
+- Coleccion: `courses`
 - Filtro: `slug = ...` (o `_id`)
-- Proyección: campos del curso + `videos[]`
+- Proyeccion: campos del curso + `videos[]`
 
-4. **Mostrar autor en una lección**
+4. **Mostrar autor en una leccion**
 - Obtener curso por `slug`.
-- Localizar vídeo por `videos.slug` (o `videos._id`).
-- Resolver `videos.authorId` contra `authors`.
+- Localizar video por `videos.slug` (o `videos._id`).
+- Resolver `videos.idAutor` contra `authors`.
 
-## Índices recomendados
+## Indices recomendados
 
 ### `courses`
-- `{ slug: 1 }` unique
-- `{ publishedAt: -1 }`
-- `{ categoryId: 1, publishedAt: -1 }`
-- `{ "videos.slug": 1 }` (multikey para lookup por lección)
+- `{ slug: 1 }` unico
+- `{ publicadoEn: -1 }`
+- `{ idCategoria: 1, publicadoEn: -1 }`
+- `{ "videos.slug": 1 }` (multikey para busqueda por leccion)
 
 ### `authors`
-- `{ slug: 1 }` unique
+- `{ slug: 1 }` unico
 
 ### `categories`
-- `{ slug: 1 }` unique
+- `{ slug: 1 }` unico
 
-## Trade-offs asumidos
-- Duplicamos poco dato en `videos[]` para acelerar lectura en página de curso.
-- El detalle completo de autor se mantiene normalizado en `authors` para no propagar cambios de biografía/avatar.
-- Si en el futuro un vídeo se compartiera entre cursos, se podría extraer `videos` a colección independiente.
+## Compensaciones asumidas
+- Duplicamos poco dato en `videos[]` para acelerar lectura en pagina de curso.
+- El detalle completo de autor se mantiene normalizado en `authors` para no propagar cambios de biografia o avatar.
+- Si en el futuro un video se compartiera entre cursos, se podria extraer `videos` a una coleccion independiente.
 
 ## Entregable incluido
-- Diagrama: `diagrama-mermaid.md`
-- Justificación de modelado: este `README.md`
+- Diagrama: `diagrama.md`
+- Justificacion de modelado: este `README.md`

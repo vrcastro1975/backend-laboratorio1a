@@ -1,104 +1,111 @@
 # Laboratorio 1A - Modelado documental (Parte opcional)
 
-## Objetivo de la ampliación
-Cubrir los requisitos opcionales y desafío:
+## Objetivo de la ampliacion
+Cubrir los requisitos opcionales y de desafio:
 
-- Jerarquía de áreas (categorías en árbol).
-- Contenido público/privado por curso y por vídeo.
-- Usuarios con suscripción y usuarios que compran cursos concretos.
-- Contabilizar visualizaciones de vídeo y de curso (no tiempo real estricto).
-- Ejemplo práctico ejecutable con `docker compose up -d`.
+- Jerarquia de areas (categorias en arbol).
+- Contenido publico/privado por curso y por video.
+- Usuarios con suscripcion y usuarios que compran cursos concretos.
+- Contabilizar visualizaciones de video y de curso (sin tiempo real estricto).
+- Ejemplo practico ejecutable con `docker compose up -d`.
 
-## Diseño opcional
+## Diseno opcional
 
-### 1) Jerarquía de categorías
-Colección `categories` con estructura árbol:
-- `parentId`: referencia al nodo padre (null en raíces).
-- `ancestorSlugs[]`: ruta precalculada para búsquedas por rama.
-- `depth`: nivel jerárquico.
+### 1) Jerarquia de categorias
+Coleccion `categories` con estructura de arbol:
+- `idCategoriaPadre`: referencia al nodo padre (`null` en raices).
+- `slugsAncestros[]`: ruta precalculada para busquedas por rama.
+- `profundidad`: nivel jerarquico.
 
 Ventaja: permite filtros como "Backend" incluyendo "Backend > Node.js > Express".
 
 ### 2) Control de acceso
 
 #### En `courses`
-- `isPublic`: visibilidad global de curso.
+- `esPublico`: visibilidad global de curso.
 
 #### En `courses.videos[]`
-- `accessLevel`: `public` | `subscribers` | `purchased`
-- `isPublic`: atajo derivado útil para filtros simples.
+- `nivelAcceso`: `public` | `subscribers` | `purchased`
+- `esPublico`: atajo derivado util para filtros simples.
 
 Regla de lectura recomendada:
-- Si `accessLevel=public`: siempre visible.
-- Si `subscribers`: visible con suscripción activa.
-- Si `purchased`: visible si el usuario compró el curso (o tiene suscripción, según política).
+- Si `nivelAcceso=public`: siempre visible.
+- Si `subscribers`: visible con suscripcion activa.
+- Si `purchased`: visible si el usuario compro el curso (o tiene suscripcion, segun politica).
 
-### 3) Usuarios y monetización
+### 3) Usuarios y monetizacion
 
 #### `users`
-Datos básicos del usuario.
+Datos basicos del usuario.
+
+#### `cursosAutores`
+Coleccion intermedia entre `courses` y `authors`.
 
 #### `subscriptions`
-Histórico de suscripciones (`active`, `cancelled`, `expired`).
+Historico de suscripciones (`active`, `cancelled`, `expired`).
 
-#### `coursePurchases`
+#### `comprasCursos`
 Compras unitarias por curso.
 
-### 4) Métricas de visualización
+### 4) Metricas de visualizacion
 
-#### `videoViewsDaily`
-Acumulado por día (`courseId`, `videoId`, `day`, `views`).
+#### `vistasVideosDiarias`
+Acumulado por dia (`idCurso`, `idVideo`, `dia`, `vistas`).
 
-#### Cachés en curso y vídeo
-- `courses.totalViewsCached`
-- `courses.videos[].viewsCached`
+#### Cache en curso y video
+- `courses.vistasTotalesCache`
+- `courses.videos[].vistasCache`
 
-Se actualizan por proceso batch o job periódico, suficiente para el requisito "no real-time".
+Se actualizan por proceso por lotes o trabajo periodico, suficiente para el requisito "sin tiempo real".
 
-## Índices recomendados (opcional)
+## Indices recomendados (opcional)
 
 ### `categories`
-- `{ slug: 1 }` unique
-- `{ parentId: 1, slug: 1 }`
-- `{ ancestorSlugs: 1 }`
+- `{ slug: 1 }` unico
+- `{ idCategoriaPadre: 1, slug: 1 }`
+- `{ slugsAncestros: 1 }`
 
 ### `courses`
-- `{ slug: 1 }` unique
-- `{ categoryId: 1, publishedAt: -1 }`
-- `{ isPublic: 1, publishedAt: -1 }`
+- `{ slug: 1 }` unico
+- `{ idCategoria: 1, publicadoEn: -1 }`
+- `{ esPublico: 1, publicadoEn: -1 }`
 - `{ "videos.slug": 1 }`
-- `{ "videos.accessLevel": 1 }`
+- `{ "videos.nivelAcceso": 1 }`
+
+### `cursosAutores`
+- `{ idCurso: 1, idAutor: 1 }` unico
+- `{ idAutor: 1, idCurso: 1 }`
 
 ### `users`
-- `{ email: 1 }` unique
+- `{ email: 1 }` unico
 
 ### `subscriptions`
-- `{ userId: 1, status: 1, endsAt: -1 }`
+- `{ idUsuario: 1, estado: 1, terminaEn: -1 }`
 
-### `coursePurchases`
-- `{ userId: 1, courseId: 1 }` unique
-- `{ courseId: 1, purchasedAt: -1 }`
+### `comprasCursos`
+- `{ idUsuario: 1, idCurso: 1 }` unico
+- `{ idCurso: 1, compradoEn: -1 }`
 
-### `videoViewsDaily`
-- `{ courseId: 1, videoId: 1, day: 1 }` unique
-- `{ day: -1 }`
+### `vistasVideosDiarias`
+- `{ idCurso: 1, idVideo: 1, dia: 1 }` unico
+- `{ dia: -1 }`
 
-## Ejemplo práctico con Docker
+## Ejemplo practico con Docker
 
 Esta carpeta incluye:
 - `docker-compose.yml`
 - `mongo-init/01-init.js`
 
-Levanta un MongoDB con datos de ejemplo y los índices creados automáticamente en el arranque.
+Levanta un MongoDB con datos de ejemplo y los indices creados automaticamente en el arranque.
 
 ### Arranque
 ```bash
 docker compose up -d
 ```
 
-### Comprobación rápida
+### Comprobacion rapida
 ```bash
-docker compose exec mongo mongosh -u appuser -p apppass --authenticationDatabase admin elearning --eval "db.courses.find({}, {title:1, slug:1, categoryId:1}).pretty()"
+docker compose exec mongo mongosh -u appuser -p apppass --authenticationDatabase admin elearning --eval "db.courses.find({}, {titulo:1, title:1, slug:1, idCategoria:1, categoryId:1}).pretty()"
 ```
 
 ### Parada
@@ -108,6 +115,6 @@ docker compose down
 
 ## Evidencias sugeridas para la entrega
 - Captura de `docker compose ps`.
-- Captura de una consulta que devuelva curso + vídeos.
+- Captura de una consulta que devuelva curso + videos.
 - Captura de una consulta de control de acceso por usuario.
 - Enlace a esta carpeta en tu repositorio del laboratorio.
