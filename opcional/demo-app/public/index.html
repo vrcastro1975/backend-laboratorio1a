@@ -5,97 +5,461 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Laboratorio 1A - Demo opcional</title>
     <style>
-      body { font-family: Arial, sans-serif; margin: 24px; line-height: 1.4; }
-      h1, h2 { margin-bottom: 8px; }
-      section { margin-bottom: 24px; }
+      :root {
+        --bg: #0f172a;
+        --card: #111827;
+        --card-soft: #1f2937;
+        --text: #e5e7eb;
+        --muted: #9ca3af;
+        --accent: #22c55e;
+        --border: #374151;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: Inter, Arial, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+      }
+      .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+      h1 { margin: 0 0 8px 0; }
+      h2 { margin: 0 0 12px 0; font-size: 1.1rem; }
+      p { color: var(--muted); margin: 0 0 12px 0; }
+      section {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 16px;
+      }
       .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
-      .card { border: 1px solid #ddd; border-radius: 8px; padding: 12px; }
-      code { background: #f4f4f4; padding: 2px 4px; border-radius: 4px; }
-      select, button { margin-right: 8px; padding: 6px; }
-      ul { margin: 6px 0 0 16px; }
+      .card {
+        background: var(--card-soft);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 12px;
+      }
+      .pill {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: rgba(34, 197, 94, .15);
+        color: #86efac;
+        font-size: .78rem;
+      }
+      .toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+      button, select {
+        background: #111827;
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 8px 10px;
+        cursor: pointer;
+      }
+      button:hover { border-color: #4b5563; }
+      ul { padding-left: 18px; }
+      li { margin-bottom: 6px; }
+      .detalle { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      @media (max-width: 900px) { .detalle { grid-template-columns: 1fr; } }
+      .muted { color: var(--muted); }
+      .error { color: #fca5a5; }
+      .small { font-size: .85rem; }
+      .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; }
+      input, textarea {
+        width: 100%;
+        background: #111827;
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 8px 10px;
+      }
+      textarea { min-height: 70px; resize: vertical; }
+      .ok { color: #86efac; }
+      .inline-check { display: inline-flex; align-items: center; gap: 8px; margin-top: 8px; }
+      .inline-check input { width: auto; margin: 0; }
     </style>
   </head>
   <body>
-    <h1>Demo opcional - Laboratorio 1A</h1>
-    <p>Consulta datos reales seed de MongoDB.</p>
+    <div class="container">
+      <h1>Demo opcional · Laboratorio 1A</h1>
+      <p>Visualización de datos seed para validar consultas principales del enunciado.</p>
 
-    <section>
-      <h2>Home: ultimos 5 videos por categoria</h2>
-      <div id="home" class="grid"></div>
-    </section>
+      <section>
+        <h2>Home · Últimos 5 vídeos por categoría principal</h2>
+        <div id="home" class="grid"></div>
+      </section>
 
-    <section>
-      <h2>Cursos por area</h2>
-      <button onclick="loadCourses()">Todos</button>
-      <button onclick="loadCourses('frontend')">Front End</button>
-      <button onclick="loadCourses('backend')">Backend</button>
-      <button onclick="loadCourses('devops')">DevOps</button>
-      <div id="courses" class="grid"></div>
-    </section>
+      <section>
+        <h2>Cursos por área</h2>
+        <div class="toolbar">
+          <button onclick="loadCursos()">Todos</button>
+          <button onclick="loadCursos('frontend')">Front End</button>
+          <button onclick="loadCursos('backend')">Backend</button>
+          <button onclick="loadCursos('devops')">DevOps</button>
+          <button onclick="loadCursos('otros')">Otros</button>
+        </div>
+        <div id="cursos" class="grid"></div>
+      </section>
 
-    <section>
-      <h2>Detalle de curso (con autor en video)</h2>
-      <select id="courseSelect"></select>
-      <button onclick="loadCourseDetail()">Ver detalle</button>
-      <pre id="courseDetail"></pre>
-    </section>
+      <section>
+        <h2>Detalle de curso</h2>
+        <div class="toolbar">
+          <select id="cursoSelect"></select>
+          <button onclick="loadCursoDetalle()">Ver curso</button>
+        </div>
+        <div id="cursoDetalle"></div>
+      </section>
+
+      <section>
+        <h2>Autores</h2>
+        <div class="toolbar">
+          <select id="autorSelect"></select>
+          <button onclick="loadAutorDetalle()">Ver autor</button>
+        </div>
+        <div id="autorDetalle"></div>
+      </section>
+
+      <section>
+        <h2>Alta rápida de datos</h2>
+        <p class="small">Permite insertar autores y cursos básicos desde la propia demo.</p>
+        <div class="card">
+          <h3>Nuevo autor</h3>
+          <div class="form-grid">
+            <input id="nuevoAutorNombre" placeholder="Nombre mostrado" />
+            <input id="nuevoAutorBio" placeholder="Bio corta" />
+          </div>
+          <div class="toolbar">
+            <button onclick="crearAutor()">Crear autor</button>
+          </div>
+        </div>
+        <div class="card" style="margin-top:12px;">
+          <h3>Nuevo curso</h3>
+          <div class="form-grid">
+            <input id="nuevoCursoTitulo" placeholder="Titulo del curso" />
+            <input id="nuevoCursoDesc" placeholder="Descripcion corta" />
+            <select id="nuevoCursoCategoria"></select>
+            <select id="nuevoCursoAutor"></select>
+          </div>
+          <label class="small muted inline-check"><input id="nuevoCursoPublico" type="checkbox" checked /><span>Curso público</span></label>
+          <div class="toolbar">
+            <button onclick="crearCurso()">Crear curso</button>
+          </div>
+        </div>
+        <div class="card" style="margin-top:12px;">
+          <h3>Acciones rápidas</h3>
+          <div class="form-grid">
+            <select id="editarCursoSelect"></select>
+            <input id="editarCursoTitulo" placeholder="Nuevo titulo de curso" />
+            <input id="editarCursoDesc" placeholder="Nueva descripcion corta" />
+          </div>
+          <div class="toolbar">
+            <button onclick="editarCurso()">Editar curso</button>
+            <button onclick="eliminarCurso()">Eliminar curso</button>
+          </div>
+          <div class="form-grid">
+            <select id="editarAutorSelect"></select>
+            <input id="editarAutorNombre" placeholder="Nuevo nombre de autor" />
+            <input id="editarAutorBio" placeholder="Nueva bio corta" />
+          </div>
+          <div class="toolbar">
+            <button onclick="editarAutor()">Editar autor</button>
+            <button onclick="eliminarAutor()">Eliminar autor</button>
+          </div>
+        </div>
+        <p id="altaMensaje" class="small muted"></p>
+      </section>
+    </div>
 
     <script>
+      const $ = (id) => document.getElementById(id);
+
       async function fetchJson(url) {
         const res = await fetch(url);
-        if (!res.ok) throw new Error('Error cargando ' + url);
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(text || `Error HTTP ${res.status}`);
+        }
         return res.json();
       }
 
+      async function postJson(url, payload) {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.message || `Error HTTP ${res.status}`);
+        return data;
+      }
+
+      async function putJson(url, payload) {
+        const res = await fetch(url, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.message || `Error HTTP ${res.status}`);
+        return data;
+      }
+
+      async function deleteJson(url) {
+        const res = await fetch(url, { method: 'DELETE' });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.message || `Error HTTP ${res.status}`);
+        return data;
+      }
+
       function renderHome(data) {
-        const root = document.getElementById('home');
-        root.innerHTML = data.map(group => `
+        $('home').innerHTML = data.map(group => `
           <div class="card">
             <h3>${group.categoria}</h3>
             <ul>
-              ${group.videos.map(v => `<li><strong>${v.videoTitle}</strong><br/><small>${v.courseTitle}</small></li>`).join('')}
+              ${group.videos.map(v => `
+                <li>
+                  <strong>${v.videoTitulo}</strong><br/>
+                  <span class="small muted">${v.cursoTitulo}</span>
+                </li>
+              `).join('')}
             </ul>
           </div>
         `).join('');
       }
 
-      function renderCourses(data) {
-        const root = document.getElementById('courses');
-        root.innerHTML = data.map(c => `
+      function renderCursos(data) {
+        $('cursos').innerHTML = data.map(c => `
           <div class="card">
             <h3>${c.titulo}</h3>
-            <p><strong>Area:</strong> ${c.categoria}</p>
+            <p><span class="pill">${c.categoria}</span></p>
             <p>${c.descripcionCorta}</p>
-            <p><code>${c.slug}</code></p>
+            <p class="small muted">slug: ${c.slug}</p>
           </div>
         `).join('');
 
-        const select = document.getElementById('courseSelect');
-        select.innerHTML = data.map(c => `<option value="${c.slug}">${c.titulo}</option>`).join('');
+        if (!data.length) {
+          $('cursos').innerHTML = '<div class="card"><p class="muted">No hay cursos en este filtro.</p></div>';
+          return;
+        }
+
+        $('cursoSelect').innerHTML = data.map(c => `<option value="${c.slug}">${c.titulo}</option>`).join('');
+        $('editarCursoSelect').innerHTML = data.map(c => `<option value="${c.slug}">${c.titulo}</option>`).join('');
+      }
+
+      function renderCursoDetalle(data) {
+        const videos = (data.videos || []).map(v => `
+          <li>
+            <strong>${v.titulo}</strong> · ${v.autorNombre}
+            <div class="small muted">${v.nivelAcceso || 'public'} · ${v.vistasCache ?? 0} vistas</div>
+          </li>
+        `).join('');
+
+        const articulos = (data.articulos || []).map(a => `
+          <li>
+            <strong>${a.titulo}</strong> · ${a.autorNombre}
+            <div class="small muted">${a.numeroPag ?? '-'} pags · ${a.vistasCache ?? 0} vistas</div>
+          </li>
+        `).join('');
+
+        $('cursoDetalle').innerHTML = `
+          <div class="card">
+            <h3>${data.titulo}</h3>
+            <p>${data.descripcionCorta}</p>
+            <p><span class="pill">${data.esPublico ? 'Publico' : 'Privado'}</span></p>
+            <p class="small muted">Vistas totales cache: ${data.vistasTotalesCache ?? 0}</p>
+            <div class="detalle">
+              <div>
+                <h4>Videos</h4>
+                <ul>${videos || '<li class="muted">Sin videos</li>'}</ul>
+              </div>
+              <div>
+                <h4>Articulos</h4>
+                <ul>${articulos || '<li class="muted">Sin articulos</li>'}</ul>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function renderAutoresListado(data) {
+        $('autorSelect').innerHTML = data.map(a => `<option value="${a.slug}">${a.nombreMostrado}</option>`).join('');
+        $('nuevoCursoAutor').innerHTML = data.map(a => `<option value="${a.slug}">${a.nombreMostrado}</option>`).join('');
+        $('editarAutorSelect').innerHTML = data.map(a => `<option value="${a.slug}">${a.nombreMostrado}</option>`).join('');
+      }
+
+      function renderCategoriasListado(data) {
+        $('nuevoCursoCategoria').innerHTML = data
+          .map((c) => `<option value="${c.slug}">${c.profundidad > 0 ? '— '.repeat(c.profundidad) : ''}${c.nombre}</option>`)
+          .join('');
+      }
+
+      function renderAutorDetalle(data) {
+        $('autorDetalle').innerHTML = `
+          <div class="card">
+            <h3>${data.nombreMostrado}</h3>
+            <p>${data.bioCorta || ''}</p>
+            <h4>Cursos en los que participa</h4>
+            <ul>
+              ${(data.cursos || []).map(c => `<li><strong>${c.titulo}</strong><br/><span class="small muted">${c.descripcionCorta}</span></li>`).join('') || '<li class="muted">Sin cursos</li>'}
+            </ul>
+          </div>
+        `;
       }
 
       async function loadHome() {
-        const data = await fetchJson('/api/home');
-        renderHome(data);
+        renderHome(await fetchJson('/api/home'));
       }
 
-      async function loadCourses(category) {
-        const query = category ? `?category=${category}` : '';
-        const data = await fetchJson('/api/courses' + query);
-        renderCourses(data);
+      async function loadCursos(categoria) {
+        const query = categoria ? `?categoria=${categoria}` : '';
+        renderCursos(await fetchJson('/api/cursos' + query));
       }
 
-      async function loadCourseDetail() {
-        const slug = document.getElementById('courseSelect').value;
+      async function loadCursoDetalle() {
+        const slug = $('cursoSelect').value;
         if (!slug) return;
-        const data = await fetchJson('/api/courses/' + slug);
-        document.getElementById('courseDetail').textContent = JSON.stringify(data, null, 2);
+        renderCursoDetalle(await fetchJson('/api/cursos/' + slug));
       }
 
-      loadHome();
-      loadCourses();
-      window.loadCourses = loadCourses;
-      window.loadCourseDetail = loadCourseDetail;
+      async function loadAutores() {
+        renderAutoresListado(await fetchJson('/api/autores'));
+      }
+
+      async function loadCategorias() {
+        renderCategoriasListado(await fetchJson('/api/categorias'));
+      }
+
+      async function loadAutorDetalle() {
+        const slug = $('autorSelect').value;
+        if (!slug) return;
+        renderAutorDetalle(await fetchJson('/api/autores/' + slug));
+      }
+
+      async function crearAutor() {
+        try {
+          const nombreMostrado = $('nuevoAutorNombre').value.trim();
+          const bioCorta = $('nuevoAutorBio').value.trim();
+          if (!nombreMostrado) throw new Error('Indica nombre del autor');
+          await postJson('/api/autores', { nombreMostrado, bioCorta });
+          $('altaMensaje').textContent = 'Autor creado correctamente.';
+          $('altaMensaje').className = 'small ok';
+          $('nuevoAutorNombre').value = '';
+          $('nuevoAutorBio').value = '';
+          await loadAutores();
+        } catch (e) {
+          $('altaMensaje').textContent = e.message;
+          $('altaMensaje').className = 'small error';
+        }
+      }
+
+      async function crearCurso() {
+        try {
+          const payload = {
+            titulo: $('nuevoCursoTitulo').value.trim(),
+            descripcionCorta: $('nuevoCursoDesc').value.trim(),
+            categoriaSlug: $('nuevoCursoCategoria').value,
+            autorSlug: $('nuevoCursoAutor').value,
+            esPublico: $('nuevoCursoPublico').checked,
+          };
+          if (!payload.titulo || !payload.descripcionCorta) throw new Error('Titulo y descripcion son obligatorios');
+          await postJson('/api/cursos', payload);
+          $('altaMensaje').textContent = 'Curso creado correctamente.';
+          $('altaMensaje').className = 'small ok';
+          $('nuevoCursoTitulo').value = '';
+          $('nuevoCursoDesc').value = '';
+          await Promise.all([loadCursos(), loadHome()]);
+        } catch (e) {
+          $('altaMensaje').textContent = e.message;
+          $('altaMensaje').className = 'small error';
+        }
+      }
+
+      async function editarCurso() {
+        try {
+          const slug = $('editarCursoSelect').value;
+          if (!slug) throw new Error('Selecciona un curso');
+          const payload = {
+            titulo: $('editarCursoTitulo').value.trim(),
+            descripcionCorta: $('editarCursoDesc').value.trim(),
+          };
+          await putJson('/api/cursos/' + slug, payload);
+          $('altaMensaje').textContent = 'Curso actualizado correctamente.';
+          $('altaMensaje').className = 'small ok';
+          $('editarCursoTitulo').value = '';
+          $('editarCursoDesc').value = '';
+          await Promise.all([loadCursos(), loadHome()]);
+        } catch (e) {
+          $('altaMensaje').textContent = e.message;
+          $('altaMensaje').className = 'small error';
+        }
+      }
+
+      async function eliminarCurso() {
+        try {
+          const slug = $('editarCursoSelect').value;
+          if (!slug) throw new Error('Selecciona un curso');
+          await deleteJson('/api/cursos/' + slug);
+          $('altaMensaje').textContent = 'Curso eliminado correctamente.';
+          $('altaMensaje').className = 'small ok';
+          await Promise.all([loadCursos(), loadHome()]);
+        } catch (e) {
+          $('altaMensaje').textContent = e.message;
+          $('altaMensaje').className = 'small error';
+        }
+      }
+
+      async function editarAutor() {
+        try {
+          const slug = $('editarAutorSelect').value;
+          if (!slug) throw new Error('Selecciona un autor');
+          const payload = {
+            nombreMostrado: $('editarAutorNombre').value.trim(),
+            bioCorta: $('editarAutorBio').value.trim(),
+          };
+          await putJson('/api/autores/' + slug, payload);
+          $('altaMensaje').textContent = 'Autor actualizado correctamente.';
+          $('altaMensaje').className = 'small ok';
+          $('editarAutorNombre').value = '';
+          $('editarAutorBio').value = '';
+          await loadAutores();
+        } catch (e) {
+          $('altaMensaje').textContent = e.message;
+          $('altaMensaje').className = 'small error';
+        }
+      }
+
+      async function eliminarAutor() {
+        try {
+          const slug = $('editarAutorSelect').value;
+          if (!slug) throw new Error('Selecciona un autor');
+          await deleteJson('/api/autores/' + slug);
+          $('altaMensaje').textContent = 'Autor eliminado correctamente.';
+          $('altaMensaje').className = 'small ok';
+          await loadAutores();
+        } catch (e) {
+          $('altaMensaje').textContent = e.message;
+          $('altaMensaje').className = 'small error';
+        }
+      }
+
+      async function init() {
+        try {
+          await Promise.all([loadHome(), loadCursos(), loadAutores(), loadCategorias()]);
+        } catch (e) {
+          document.body.insertAdjacentHTML('beforeend', `<p class="error">${e.message}</p>`);
+        }
+      }
+
+      window.loadCursos = loadCursos;
+      window.loadCursoDetalle = loadCursoDetalle;
+      window.loadAutorDetalle = loadAutorDetalle;
+      window.crearAutor = crearAutor;
+      window.crearCurso = crearCurso;
+      window.editarCurso = editarCurso;
+      window.eliminarCurso = eliminarCurso;
+      window.editarAutor = editarAutor;
+      window.eliminarAutor = eliminarAutor;
+      init();
     </script>
   </body>
 </html>

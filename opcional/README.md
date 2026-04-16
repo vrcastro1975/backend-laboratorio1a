@@ -96,32 +96,8 @@ Además del modelado, esta carpeta incluye una demo mínima para visualizar dato
 - Servicio `mongo`: base de datos con inicialización automática.
 - Servicio `demo`: app Node.js + TypeScript + Express con interfaz web.
 
-### Arranque
-```bash
-docker compose up -d --build
-```
-
-> Importante: el script de inicialización (`mongo-init/01-init.js`) solo se ejecuta la primera vez que se crea el volumen de Mongo.
-> Si cambias el seed o el modelo y quieres reinicializar los datos, ejecuta:
-
-```bash
-docker compose down -v
-docker compose up -d --build
-```
-
-### URLs
-- Interfaz web: [http://localhost:3000](http://localhost:3000)
-- Healthcheck demo: [http://localhost:3000/health](http://localhost:3000/health)
-
-### Qué muestra la interfaz
-- Últimos 5 vídeos publicados por categoría (home).
-- Cursos por área.
-- Detalle de curso con vídeos/artículos y autor en vídeo.
-
-### Parada
-```bash
-docker compose down
-```
+Para instrucciones completas de arranque, parada, reinicialización y URLs de prueba,
+consulta el fichero `despliegue.md`.
 
 ## Conclusión
 La parte opcional mantiene la estrategia documental del modelo base y añade capacidades de producto (jerarquía, permisos, monetización y analítica) sin sacrificar legibilidad ni rendimiento de lectura.
