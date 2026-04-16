@@ -15,26 +15,26 @@ erDiagram
     AUTORES ||--|{ CURSOS_AUTORES : "1:M vincula"
 
     CATEGORIAS {
-      _id objectId
-      slug string
-      nombre string
+      _id objectId NN
+      slug string NN
+      nombre string NN
       creadoEn date
       actualizadoEn date
     }
 
     TEMATICAS {
-      _id objectId
-      slug string
-      nombre string
+      _id objectId NN
+      slug string NN
+      nombre string NN
       creadoEn date
       actualizadoEn date
     }
 
     AUTORES {
-      _id objectId
-      slug string
-      nombreMostrado string
-      bioCorta string
+      _id objectId NN
+      slug string NN
+      nombreMostrado string NN
+      bioCorta string NN
       urlAvatar string
       enlacesSociales string[]
       creadoEn date
@@ -42,47 +42,47 @@ erDiagram
     }
 
     CURSOS {
-      _id objectId
-      slug string
-      titulo string
-      descripcionCorta string
+      _id objectId NN
+      slug string NN
+      titulo string NN
+      descripcionCorta string NN
       nivel string
-      idCategoria objectId
-      idContenidoCursoCms string
-      publicadoEn date
+      idCategoria objectId NN FK->CATEGORIAS._id
+      idContenidoCursoCms string NN
+      publicadoEn date NN
       creadoEn date
       actualizadoEn date
       videos object[]
-        videos._id objectId
-        videos.orden int
-        videos.slug string
-        videos.titulo string
+        videos._id objectId NN
+        videos.orden int NN
+        videos.slug string NN
+        videos.titulo string NN
         videos.resumen string
-        videos.idTematica objectId
-        videos.idAutor objectId
-        videos.idRecursoVideo string
+        videos.idTematica objectId NN FK->TEMATICAS._id
+        videos.idAutor objectId NN FK->AUTORES._id
+        videos.idRecursoVideo string NN
         videos.idContenidoArticuloCms string
-        videos.publicadoEn date
+        videos.publicadoEn date NN
         videos.duracionSeg int
         videos.publicado bool
       articulos object[]
-        articulos._id objectId
-        articulos.orden int
-        articulos.slug string
-        articulos.titulo string
+        articulos._id objectId NN
+        articulos.orden int NN
+        articulos.slug string NN
+        articulos.titulo string NN
         articulos.resumen string
-        articulos.idAutor objectId
-        articulos.idRecursoArticulo string
+        articulos.idAutor objectId NN FK->AUTORES._id
+        articulos.idRecursoArticulo string NN
         articulos.idContenidoArticuloCms string
-        articulos.publicadoEn date
+        articulos.publicadoEn date NN
         articulos.numeroPag int
         articulos.publicado bool
     }
 
     CURSOS_AUTORES {
-      _id objectId
-      idCurso objectId
-      idAutor objectId
+      _id objectId NN
+      idCurso objectId NN FK->CURSOS._id
+      idAutor objectId NN FK->AUTORES._id
       rol string
       creadoEn date
     }

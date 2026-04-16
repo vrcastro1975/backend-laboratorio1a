@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Laboratorio 1A - Demo opcional</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 24px; line-height: 1.4; }
+      h1, h2 { margin-bottom: 8px; }
+      section { margin-bottom: 24px; }
+      .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+      .card { border: 1px solid #ddd; border-radius: 8px; padding: 12px; }
+      code { background: #f4f4f4; padding: 2px 4px; border-radius: 4px; }
+      select, button { margin-right: 8px; padding: 6px; }
+      ul { margin: 6px 0 0 16px; }
+    </style>
+  </head>
+  <body>
+    <h1>Demo opcional - Laboratorio 1A</h1>
+    <p>Consulta datos reales seed de MongoDB.</p>
+
+    <section>
+      <h2>Home: ultimos 5 videos por categoria</h2>
+      <div id="home" class="grid"></div>
+    </section>
+
+    <section>
+      <h2>Cursos por area</h2>
+      <button onclick="loadCourses()">Todos</button>
+      <button onclick="loadCourses('frontend')">Front End</button>
+      <button onclick="loadCourses('backend')">Backend</button>
+      <button onclick="loadCourses('devops')">DevOps</button>
+      <div id="courses" class="grid"></div>
+    </section>
+
+    <section>
+      <h2>Detalle de curso (con autor en video)</h2>
+      <select id="courseSelect"></select>
+      <button onclick="loadCourseDetail()">Ver detalle</button>
+      <pre id="courseDetail"></pre>
+    </section>
+
+    <script>
+      async function fetchJson(url) {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Error cargando ' + url);
+        return res.json();
+      }
+
+      function renderHome(data) {
+        const root = document.getElementById('home');
+        root.innerHTML = data.map(group => `
+          <div class="card">
+            <h3>${group.categoria}</h3>
+            <ul>
+              ${group.videos.map(v => `<li><strong>${v.videoTitle}</strong><br/><small>${v.courseTitle}</small></li>`).join('')}
+            </ul>
+          </div>
+        `).join('');
+      }
+
+      function renderCourses(data) {
+        const root = document.getElementById('courses');
+        root.innerHTML = data.map(c => `
+          <div class="card">
+            <h3>${c.titulo}</h3>
+            <p><strong>Area:</strong> ${c.categoria}</p>
+            <p>${c.descripcionCorta}</p>
+            <p><code>${c.slug}</code></p>
+          </div>
+        `).join('');
+
+        const select = document.getElementById('courseSelect');
+        select.innerHTML = data.map(c => `<option value="${c.slug}">${c.titulo}</option>`).join('');
+      }
+
+      async function loadHome() {
+        const data = await fetchJson('/api/home');
+        renderHome(data);
+      }
+
+      async function loadCourses(category) {
+        const query = category ? `?category=${category}` : '';
+        const data = await fetchJson('/api/courses' + query);
+        renderCourses(data);
+      }
+
+      async function loadCourseDetail() {
+        const slug = document.getElementById('courseSelect').value;
+        if (!slug) return;
+        const data = await fetchJson('/api/courses/' + slug);
+        document.getElementById('courseDetail').textContent = JSON.stringify(data, null, 2);
+      }
+
+      loadHome();
+      loadCourses();
+      window.loadCourses = loadCourses;
+      window.loadCourseDetail = loadCourseDetail;
+    </script>
+  </body>
+</html>

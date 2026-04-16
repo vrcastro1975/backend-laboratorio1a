@@ -1,4 +1,4 @@
-// Inicializacion de datos de ejemplo para el laboratorio 1A (opcional).
+// Inicializacion de datos de ejemplo (opcional) en espanol.
 // Se ejecuta automaticamente en el primer arranque del contenedor.
 
 const adminDb = db.getSiblingDB("admin");
@@ -9,268 +9,262 @@ adminDb.createUser({
 });
 
 const elearning = db.getSiblingDB("elearning");
-
 const now = new Date();
 
-const categories = [
-  {
-    _id: ObjectId(),
-    slug: "frontend",
-    name: "Front End",
-    parentId: null,
-    ancestorSlugs: [],
-    depth: 0,
-  },
-  {
-    _id: ObjectId(),
-    slug: "react",
-    name: "React",
-    parentId: null, // actualizamos tras conocer el id de frontend
-    ancestorSlugs: ["frontend"],
-    depth: 1,
-  },
-  {
-    _id: ObjectId(),
-    slug: "backend",
-    name: "Backend",
-    parentId: null,
-    ancestorSlugs: [],
-    depth: 0,
-  },
-  {
-    _id: ObjectId(),
-    slug: "nodejs",
-    name: "Node.js",
-    parentId: null, // actualizamos tras conocer el id de backend
-    ancestorSlugs: ["backend"],
-    depth: 1,
-  },
-  {
-    _id: ObjectId(),
-    slug: "devops",
-    name: "DevOps",
-    parentId: null,
-    ancestorSlugs: [],
-    depth: 0,
-  },
+// Colecciones (sin tildes ni enyes): arbol_categorias, tematicas, autores,
+// usuarios, suscripciones, usuarios_cursos, cursos, cursos_autores, vistas_diarias_video
+
+const arbolCategorias = [
+  { _id: ObjectId(), slug: "frontend", nombre: "Front End", idCategoriaPadre: null, slugsAncestros: [], profundidad: 0, creadoEn: now, actualizadoEn: now },
+  { _id: ObjectId(), slug: "react", nombre: "React", idCategoriaPadre: null, slugsAncestros: ["frontend"], profundidad: 1, creadoEn: now, actualizadoEn: now },
+  { _id: ObjectId(), slug: "backend", nombre: "Backend", idCategoriaPadre: null, slugsAncestros: [], profundidad: 0, creadoEn: now, actualizadoEn: now },
+  { _id: ObjectId(), slug: "nodejs", nombre: "Node.js", idCategoriaPadre: null, slugsAncestros: ["backend"], profundidad: 1, creadoEn: now, actualizadoEn: now },
+  { _id: ObjectId(), slug: "devops", nombre: "DevOps", idCategoriaPadre: null, slugsAncestros: [], profundidad: 0, creadoEn: now, actualizadoEn: now },
 ];
 
-categories[1].parentId = categories[0]._id;
-categories[3].parentId = categories[2]._id;
+arbolCategorias[1].idCategoriaPadre = arbolCategorias[0]._id;
+arbolCategorias[3].idCategoriaPadre = arbolCategorias[2]._id;
 
-elearning.categories.insertMany(categories);
+elearning.arbol_categorias.insertMany(arbolCategorias);
 
-const authors = [
+const tematicas = [
+  { _id: ObjectId(), slug: "frontend", nombre: "Front End", creadoEn: now, actualizadoEn: now },
+  { _id: ObjectId(), slug: "backend", nombre: "Back End", creadoEn: now, actualizadoEn: now },
+  { _id: ObjectId(), slug: "devops", nombre: "DevOps", creadoEn: now, actualizadoEn: now },
+];
+
+elearning.tematicas.insertMany(tematicas);
+
+const autores = [
   {
     _id: ObjectId(),
     slug: "daniel-sanchez",
-    displayName: "Daniel Sanchez",
-    shortBio:
-      "Desarrollador especializado en Front End y Backend. Docente en contenidos de React y Node.js.",
-    avatarUrl: "https://cdn.example.com/authors/daniel.png",
-    socialLinks: ["https://github.com/danielsanchez", "https://x.com/daniel"],
-    createdAt: now,
-    updatedAt: now,
+    nombreMostrado: "Daniel Sanchez",
+    bioCorta: "Desarrollador especializado en Front End y Backend. Docente en contenidos de React y Node.js.",
+    urlAvatar: "https://cdn.example.com/autores/daniel.png",
+    enlacesSociales: ["https://github.com/danielsanchez", "https://x.com/daniel"],
+    creadoEn: now,
+    actualizadoEn: now,
   },
   {
     _id: ObjectId(),
     slug: "laura-martin",
-    displayName: "Laura Martin",
-    shortBio: "Ingeniera de software y autora de cursos de arquitectura backend.",
-    avatarUrl: "https://cdn.example.com/authors/laura.png",
-    socialLinks: ["https://github.com/lauramartin"],
-    createdAt: now,
-    updatedAt: now,
+    nombreMostrado: "Laura Martin",
+    bioCorta: "Ingeniera de software y autora de cursos de arquitectura backend.",
+    urlAvatar: "https://cdn.example.com/autores/laura.png",
+    enlacesSociales: ["https://github.com/lauramartin"],
+    creadoEn: now,
+    actualizadoEn: now,
   },
 ];
 
-elearning.authors.insertMany(authors);
+elearning.autores.insertMany(autores);
 
-const courses = [
+const cursos = [
   {
     _id: ObjectId(),
     slug: "introduccion-react",
-    title: "Introduccion a React",
-    shortDescription:
-      "Aprende React desde cero con enfoque practico y base en TypeScript.",
-    level: "beginner",
-    categoryId: categories[1]._id,
-    authorIds: [authors[0]._id],
-    courseContentCmsId: "cms-course-react-001",
-    isPublic: true,
-    publishedAt: new Date("2026-01-15T10:00:00Z"),
-    totalViewsCached: 2140,
+    titulo: "Introduccion a React",
+    descripcionCorta: "Aprende React desde cero con enfoque practico y base en TypeScript.",
+    idCategoria: arbolCategorias[1]._id, // React
+    idContenidoCursoCms: "cms-curso-react-001",
+    esPublico: true,
+    publicadoEn: new Date("2026-01-15T10:00:00Z"),
+    vistasTotalesCache: 2140,
     videos: [
       {
         _id: ObjectId(),
-        order: 1,
+        orden: 1,
         slug: "base",
-        title: "Base",
-        summary: "Conceptos previos para arrancar con React.",
-        authorId: authors[0]._id,
-        videoAssetId: "s3://videos/react/base.mp4",
-        articleContentCmsId: "cms-article-react-base",
-        durationSec: 580,
-        accessLevel: "public",
-        isPublic: true,
-        isPublished: true,
-        publishedAt: new Date("2026-01-16T10:00:00Z"),
-        viewsCached: 980,
+        titulo: "Base",
+        resumen: "Conceptos previos para arrancar con React.",
+        idTematica: tematicas[0]._id,
+        idAutor: autores[0]._id,
+        idRecursoVideo: "s3://videos/react/base.mp4",
+        idContenidoArticuloCms: "cms-articulo-react-base",
+        duracionSeg: 580,
+        nivelAcceso: "public",
+        esPublico: true,
+        estaPublicado: true,
+        publicadoEn: new Date("2026-01-16T10:00:00Z"),
+        vistasCache: 980,
       },
       {
         _id: ObjectId(),
-        order: 2,
+        orden: 2,
         slug: "props-y-tipado",
-        title: "React + TypeScript: Props",
-        summary: "Tipado de props y patrones de componentes.",
-        authorId: authors[0]._id,
-        videoAssetId: "s3://videos/react/props.mp4",
-        articleContentCmsId: "cms-article-react-props",
-        durationSec: 760,
-        accessLevel: "subscribers",
-        isPublic: false,
-        isPublished: true,
-        publishedAt: new Date("2026-01-17T10:00:00Z"),
-        viewsCached: 620,
+        titulo: "React + TypeScript: Props",
+        resumen: "Tipado de props y patrones de componentes.",
+        idTematica: tematicas[0]._id,
+        idAutor: autores[0]._id,
+        idRecursoVideo: "s3://videos/react/props.mp4",
+        idContenidoArticuloCms: "cms-articulo-react-props",
+        duracionSeg: 760,
+        nivelAcceso: "subscribers",
+        esPublico: false,
+        estaPublicado: true,
+        publicadoEn: new Date("2026-01-17T10:00:00Z"),
+        vistasCache: 620,
       },
     ],
-    createdAt: now,
-    updatedAt: now,
+    articulos: [
+      {
+        _id: ObjectId(),
+        orden: 1,
+        slug: "guia-inicio-react",
+        titulo: "Guia de inicio con React",
+        resumen: "Material de apoyo en PDF.",
+        idAutor: autores[0]._id,
+        idRecursoArticulo: "s3://articulos/react/guia-inicio.pdf",
+        idContenidoArticuloCms: "cms-articulo-react-guia",
+        publicadoEn: new Date("2026-01-16T12:00:00Z"),
+        numeroPag: 12,
+        nivelAcceso: "public",
+        esPublico: true,
+        vistasCache: 240,
+      },
+    ],
+    creadoEn: now,
+    actualizadoEn: now,
   },
   {
     _id: ObjectId(),
     slug: "backend-nodejs-api",
-    title: "Backend Node.js API",
-    shortDescription:
-      "Disena y construye APIs REST robustas con Node.js y buenas practicas.",
-    level: "intermediate",
-    categoryId: categories[3]._id,
-    authorIds: [authors[1]._id],
-    courseContentCmsId: "cms-course-node-001",
-    isPublic: false,
-    publishedAt: new Date("2026-02-02T12:00:00Z"),
-    totalViewsCached: 1250,
+    titulo: "Backend Node.js API",
+    descripcionCorta: "Disena y construye APIs REST robustas con Node.js y buenas practicas.",
+    idCategoria: arbolCategorias[3]._id, // Node.js
+    idContenidoCursoCms: "cms-curso-node-001",
+    esPublico: false,
+    publicadoEn: new Date("2026-02-02T12:00:00Z"),
+    vistasTotalesCache: 1250,
     videos: [
       {
         _id: ObjectId(),
-        order: 1,
+        orden: 1,
         slug: "arquitectura-api",
-        title: "Arquitectura de API",
-        summary: "Capas, contratos y estructura de proyecto.",
-        authorId: authors[1]._id,
-        videoAssetId: "s3://videos/node/api-architecture.mp4",
-        articleContentCmsId: "cms-article-node-arch",
-        durationSec: 840,
-        accessLevel: "public",
-        isPublic: true,
-        isPublished: true,
-        publishedAt: new Date("2026-02-03T12:00:00Z"),
-        viewsCached: 760,
+        titulo: "Arquitectura de API",
+        resumen: "Capas, contratos y estructura de proyecto.",
+        idTematica: tematicas[1]._id,
+        idAutor: autores[1]._id,
+        idRecursoVideo: "s3://videos/node/api-architecture.mp4",
+        idContenidoArticuloCms: "cms-articulo-node-arch",
+        duracionSeg: 840,
+        nivelAcceso: "public",
+        esPublico: true,
+        estaPublicado: true,
+        publicadoEn: new Date("2026-02-03T12:00:00Z"),
+        vistasCache: 760,
       },
       {
         _id: ObjectId(),
-        order: 2,
+        orden: 2,
         slug: "autenticacion-jwt",
-        title: "Autenticacion JWT",
-        summary: "Implementacion de login y autorizacion basada en JWT.",
-        authorId: authors[1]._id,
-        videoAssetId: "s3://videos/node/jwt.mp4",
-        articleContentCmsId: "cms-article-node-jwt",
-        durationSec: 920,
-        accessLevel: "purchased",
-        isPublic: false,
-        isPublished: true,
-        publishedAt: new Date("2026-02-05T12:00:00Z"),
-        viewsCached: 490,
+        titulo: "Autenticacion JWT",
+        resumen: "Implementacion de login y autorizacion basada en JWT.",
+        idTematica: tematicas[1]._id,
+        idAutor: autores[1]._id,
+        idRecursoVideo: "s3://videos/node/jwt.mp4",
+        idContenidoArticuloCms: "cms-articulo-node-jwt",
+        duracionSeg: 920,
+        nivelAcceso: "purchased",
+        esPublico: false,
+        estaPublicado: true,
+        publicadoEn: new Date("2026-02-05T12:00:00Z"),
+        vistasCache: 490,
       },
     ],
-    createdAt: now,
-    updatedAt: now,
+    articulos: [
+      {
+        _id: ObjectId(),
+        orden: 1,
+        slug: "checklist-api",
+        titulo: "Checklist de API",
+        resumen: "Checklist de buenas practicas en PDF.",
+        idAutor: autores[1]._id,
+        idRecursoArticulo: "s3://articulos/node/checklist-api.pdf",
+        idContenidoArticuloCms: "cms-articulo-node-checklist",
+        publicadoEn: new Date("2026-02-03T15:00:00Z"),
+        numeroPag: 8,
+        nivelAcceso: "subscribers",
+        esPublico: false,
+        vistasCache: 110,
+      },
+    ],
+    creadoEn: now,
+    actualizadoEn: now,
   },
 ];
 
-elearning.courses.insertMany(courses);
+elearning.cursos.insertMany(cursos);
 
-const users = [
-  {
-    _id: ObjectId(),
-    email: "alumno1@example.com",
-    displayName: "Alumno Uno",
-    createdAt: now,
-  },
-  {
-    _id: ObjectId(),
-    email: "alumno2@example.com",
-    displayName: "Alumno Dos",
-    createdAt: now,
-  },
+// Coleccion puente curso-autor (metadatos de participacion)
+elearning.cursos_autores.insertMany([
+  { _id: ObjectId(), idCurso: cursos[0]._id, idAutor: autores[0]._id, rol: "autor", creadoEn: now },
+  { _id: ObjectId(), idCurso: cursos[1]._id, idAutor: autores[1]._id, rol: "autor", creadoEn: now },
+]);
+
+const usuarios = [
+  { _id: ObjectId(), email: "alumno1@example.com", nombreMostrado: "Alumno Uno", creadoEn: now },
+  { _id: ObjectId(), email: "alumno2@example.com", nombreMostrado: "Alumno Dos", creadoEn: now },
 ];
 
-elearning.users.insertMany(users);
+elearning.usuarios.insertMany(usuarios);
 
-elearning.subscriptions.insertMany([
+elearning.suscripciones.insertMany([
   {
     _id: ObjectId(),
-    userId: users[0]._id,
+    idUsuario: usuarios[0]._id,
     plan: "monthly",
-    startsAt: new Date("2026-03-01T00:00:00Z"),
-    endsAt: new Date("2026-03-31T23:59:59Z"),
-    status: "active",
+    iniciaEn: new Date("2026-03-01T00:00:00Z"),
+    terminaEn: new Date("2026-03-31T23:59:59Z"),
+    estado: "active",
   },
 ]);
 
-elearning.coursePurchases.insertMany([
+elearning.usuarios_cursos.insertMany([
   {
     _id: ObjectId(),
-    userId: users[1]._id,
-    courseId: courses[1]._id,
-    purchasedAt: new Date("2026-03-05T14:00:00Z"),
-    amount: 49,
-    currency: "EUR",
+    idUsuario: usuarios[1]._id,
+    idCurso: cursos[1]._id,
+    compradoEn: new Date("2026-03-05T14:00:00Z"),
+    importe: NumberDecimal("49.00"),
+    moneda: "EUR",
   },
 ]);
 
-elearning.videoViewsDaily.insertMany([
-  {
-    _id: ObjectId(),
-    courseId: courses[0]._id,
-    videoId: courses[0].videos[0]._id,
-    day: new Date("2026-03-08T00:00:00Z"),
-    views: 120,
-  },
-  {
-    _id: ObjectId(),
-    courseId: courses[1]._id,
-    videoId: courses[1].videos[1]._id,
-    day: new Date("2026-03-08T00:00:00Z"),
-    views: 75,
-  },
+elearning.vistas_diarias_video.insertMany([
+  { _id: ObjectId(), idCurso: cursos[0]._id, idVideo: cursos[0].videos[0]._id, dia: new Date("2026-03-08T00:00:00Z"), vistas: 120 },
+  { _id: ObjectId(), idCurso: cursos[1]._id, idVideo: cursos[1].videos[1]._id, dia: new Date("2026-03-08T00:00:00Z"), vistas: 75 },
 ]);
 
-// Indices de la parte obligatoria + opcional
-elearning.categories.createIndex({ slug: 1 }, { unique: true });
-elearning.categories.createIndex({ parentId: 1, slug: 1 });
-elearning.categories.createIndex({ ancestorSlugs: 1 });
+// Indices (alineados con el modelo en espanol)
+elearning.arbol_categorias.createIndex({ slug: 1 }, { unique: true });
+elearning.arbol_categorias.createIndex({ idCategoriaPadre: 1, slug: 1 });
+elearning.arbol_categorias.createIndex({ slugsAncestros: 1 });
 
-elearning.authors.createIndex({ slug: 1 }, { unique: true });
+elearning.tematicas.createIndex({ slug: 1 }, { unique: true });
+elearning.autores.createIndex({ slug: 1 }, { unique: true });
 
-elearning.courses.createIndex({ slug: 1 }, { unique: true });
-elearning.courses.createIndex({ publishedAt: -1 });
-elearning.courses.createIndex({ categoryId: 1, publishedAt: -1 });
-elearning.courses.createIndex({ isPublic: 1, publishedAt: -1 });
-elearning.courses.createIndex({ "videos.slug": 1 });
-elearning.courses.createIndex({ "videos.accessLevel": 1 });
+elearning.cursos.createIndex({ slug: 1 }, { unique: true });
+elearning.cursos.createIndex({ publicadoEn: -1 });
+elearning.cursos.createIndex({ idCategoria: 1, publicadoEn: -1 });
+elearning.cursos.createIndex({ esPublico: 1, publicadoEn: -1 });
+elearning.cursos.createIndex({ "videos.slug": 1 });
+elearning.cursos.createIndex({ "videos.idTematica": 1, publicadoEn: -1 });
+elearning.cursos.createIndex({ "videos.nivelAcceso": 1 });
+elearning.cursos.createIndex({ "articulos.slug": 1 });
+elearning.cursos.createIndex({ "articulos.nivelAcceso": 1 });
 
-elearning.users.createIndex({ email: 1 }, { unique: true });
+elearning.cursos_autores.createIndex({ idCurso: 1, idAutor: 1 }, { unique: true });
+elearning.cursos_autores.createIndex({ idAutor: 1, idCurso: 1 });
 
-elearning.subscriptions.createIndex({ userId: 1, status: 1, endsAt: -1 });
-elearning.coursePurchases.createIndex({ userId: 1, courseId: 1 }, { unique: true });
-elearning.coursePurchases.createIndex({ courseId: 1, purchasedAt: -1 });
+elearning.usuarios.createIndex({ email: 1 }, { unique: true });
+elearning.suscripciones.createIndex({ idUsuario: 1, estado: 1, terminaEn: -1 });
 
-elearning.videoViewsDaily.createIndex(
-  { courseId: 1, videoId: 1, day: 1 },
-  { unique: true }
-);
-elearning.videoViewsDaily.createIndex({ day: -1 });
+elearning.usuarios_cursos.createIndex({ idUsuario: 1, idCurso: 1 }, { unique: true });
+elearning.usuarios_cursos.createIndex({ idCurso: 1, compradoEn: -1 });
 
-print("Inicializacion completada para base de datos elearning");
+elearning.vistas_diarias_video.createIndex({ idCurso: 1, idVideo: 1, dia: 1 }, { unique: true });
+elearning.vistas_diarias_video.createIndex({ dia: -1 });
+
+print("Inicializacion completada para base de datos elearning (espanol)");

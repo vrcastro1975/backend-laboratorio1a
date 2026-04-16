@@ -6,7 +6,7 @@ Relaciones en formato clásico:
 - `CURSOS 1:M CURSOS_AUTORES`
 - `AUTORES 1:M CURSOS_AUTORES`
 - `USUARIOS 1:M SUSCRIPCIONES`
-- `USUARIOS M:M CURSOS` mediante `COMPRAS_DE_CURSO`
+- `USUARIOS M:M CURSOS` mediante `USUARIOS_CURSOS`
 - `CURSOS` incluye `videos[]` y `articulos[]` embebidos (subdocumentos, no colección aparte)
 - `CURSOS 1:M VISTAS_DIARIAS_VIDEO`
 
@@ -17,95 +17,106 @@ erDiagram
     CURSOS ||--|{ CURSOS_AUTORES : "1:M vincula"
     AUTORES ||--|{ CURSOS_AUTORES : "1:M vincula"
     USUARIOS ||--|{ SUSCRIPCIONES : "1:M tiene"
-    USUARIOS ||--|{ COMPRAS_DE_CURSO : "1:M compra"
-    CURSOS ||--|{ COMPRAS_DE_CURSO : "1:M vendido"
+    USUARIOS ||--|{ USUARIOS_CURSOS : "1:M compra"
+    CURSOS ||--|{ USUARIOS_CURSOS : "1:M vendido"
     CURSOS ||--|{ VISTAS_DIARIAS_VIDEO : "1:M agrega"
 
     ARBOL_CATEGORIAS {
-      _id objectId
-      slug string
-      nombre string
-      idCategoriaPadre objectId
+      _id objectId NN
+      slug string NN
+      nombre string NN
+      idCategoriaPadre objectId FK->ARBOL_CATEGORIAS._id
       slugsAncestros string[]
       profundidad int
     }
 
     TEMATICAS {
-      _id objectId
-      slug string
-      nombre string
+      _id objectId NN
+      slug string NN
+      nombre string NN
+      creadoEn date
+      actualizadoEn date
+    }
+
+    AUTORES {
+      _id objectId NN
+      slug string NN
+      nombreMostrado string NN
+      bioCorta string NN
+      urlAvatar string
+      enlacesSociales string[]
       creadoEn date
       actualizadoEn date
     }
 
     USUARIOS {
-      _id objectId
-      email string
-      nombreMostrado string
+      _id objectId NN
+      email string NN
+      nombreMostrado string NN
       creadoEn date
     }
 
     SUSCRIPCIONES {
-      _id objectId
-      idUsuario objectId
-      plan string
-      iniciaEn date
-      terminaEn date
-      estado string
+      _id objectId NN
+      idUsuario objectId NN FK->USUARIOS._id
+      plan string NN
+      iniciaEn date NN
+      terminaEn date NN
+      estado string NN
     }
 
-    COMPRAS_DE_CURSO {
-      _id objectId
-      idUsuario objectId
-      idCurso objectId
-      compradoEn date
-      importe number
-      moneda string
+    USUARIOS_CURSOS {
+      _id objectId NN
+      idUsuario objectId NN FK->USUARIOS._id
+      idCurso objectId NN FK->CURSOS._id
+      compradoEn date NN
+      importe decimal NN
+      moneda string NN
     }
 
     CURSOS {
-      _id objectId
-      slug string
-      titulo string
-      idCategoria objectId
+      _id objectId NN
+      slug string NN
+      titulo string NN
+      idCategoria objectId NN FK->ARBOL_CATEGORIAS._id
       esPublico bool
       vistasTotalesCache int
       videos object[]
-        videos._id objectId
-        videos.slug string
-        videos.idTematica objectId
-        videos.idAutor objectId
-        videos.nivelAcceso string
+        videos._id objectId NN
+        videos.slug string NN
+        videos.idTematica objectId NN FK->TEMATICAS._id
+        videos.idAutor objectId NN FK->AUTORES._id
+        videos.nivelAcceso string NN
         videos.esPublico bool
         videos.vistasCache int
-        videos.idRecursoVideo string
+        videos.idRecursoVideo string NN
         videos.idContenidoArticuloCms string
       articulos object[]
-        articulos._id objectId
-        articulos.slug string
-        articulos.idAutor objectId
-        articulos.nivelAcceso string
+        articulos._id objectId NN
+        articulos.slug string NN
+        articulos.idAutor objectId NN FK->AUTORES._id
+        articulos.nivelAcceso string NN
         articulos.esPublico bool
         articulos.vistasCache int
-        articulos.idRecursoArticulo string
+        articulos.idRecursoArticulo string NN
         articulos.idContenidoArticuloCms string
         articulos.numeroPag int
     }
 
     CURSOS_AUTORES {
-      _id objectId
-      idCurso objectId
-      idAutor objectId
+      _id objectId NN
+      idCurso objectId NN FK->CURSOS._id
+      idAutor objectId NN FK->AUTORES._id
       rol string
       creadoEn date
     }
 
     VISTAS_DIARIAS_VIDEO {
-      _id objectId
-      idCurso objectId
-      idVideo objectId
-      dia date
-      vistas int
+      _id objectId NN
+      idCurso objectId NN FK->CURSOS._id
+      idVideo objectId NN FK->CURSOS.videos._id
+      dia date NN
+      vistas int NN
     }
 ```
 
@@ -123,7 +134,7 @@ erDiagram
 - `AUTORES._id -> CURSOS.articulos.idAutor` (1:M, hacia subdocumento embebido)
 - `ARBOL_CATEGORIAS._id -> ARBOL_CATEGORIAS.idCategoriaPadre` (1:M, autorrelación)
 - `USUARIOS._id -> SUSCRIPCIONES.idUsuario` (1:M)
-- `USUARIOS._id -> COMPRAS_DE_CURSO.idUsuario` (1:M)
-- `CURSOS._id -> COMPRAS_DE_CURSO.idCurso` (1:M)
+- `USUARIOS._id -> USUARIOS_CURSOS.idUsuario` (1:M)
+- `CURSOS._id -> USUARIOS_CURSOS.idCurso` (1:M)
 - `CURSOS._id -> VISTAS_DIARIAS_VIDEO.idCurso` (1:M)
 - `CURSOS.videos._id -> VISTAS_DIARIAS_VIDEO.idVideo` (1:M, referencia desde subdocumento embebido)

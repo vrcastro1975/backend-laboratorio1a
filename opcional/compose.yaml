@@ -11,6 +11,18 @@ services:
     volumes:
       - mongo_data_l1a:/data/db
       - ./mongo-init:/docker-entrypoint-initdb.d:ro
+  demo:
+    build:
+      context: ./demo-app
+    container_name: l1a-demo
+    restart: unless-stopped
+    depends_on:
+      - mongo
+    ports:
+      - "3000:3000"
+    environment:
+      MONGO_URL: mongodb://appuser:apppass@mongo:27017/elearning?authSource=admin
+      MONGO_DB_NAME: elearning
 
 volumes:
   mongo_data_l1a:

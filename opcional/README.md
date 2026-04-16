@@ -20,6 +20,35 @@ Razón:
 - Escala mejor que una lista plana cuando crecen subáreas.
 - Facilita navegación por ramas y expansión futura del catálogo.
 
+#### ¿Qué significa la autorrelación?
+En `ARBOL_CATEGORIAS` existe el campo `idCategoriaPadre`, que apunta al `_id` de **otro documento de la misma colección**.
+
+Esto permite representar un árbol:
+- Las categorías **raíz** tienen `idCategoriaPadre = null`.
+- Las **subcategorías** apuntan a su padre.
+
+La relación que aparece en el diagrama:
+`ARBOL_CATEGORIAS._id -> ARBOL_CATEGORIAS.idCategoriaPadre (1:M)`
+significa: **una** categoría puede tener **muchas** subcategorías.
+
+Ejemplo (simplificado):
+
+```js
+// Raíz
+{ _id: ObjectId("A"), slug: "frontend", nombre: "Front End", idCategoriaPadre: null }
+
+// Hijas de "frontend"
+{ _id: ObjectId("B"), slug: "react", nombre: "React", idCategoriaPadre: ObjectId("A") }
+{ _id: ObjectId("C"), slug: "angular", nombre: "Angular", idCategoriaPadre: ObjectId("A") }
+
+// Nieta de "react"
+{ _id: ObjectId("D"), slug: "testing", nombre: "Testing", idCategoriaPadre: ObjectId("B") }
+```
+
+Con esa estructura puedes navegar:
+- hacia arriba (padre) usando `idCategoriaPadre`
+- hacia abajo (hijos) buscando por `idCategoriaPadre = <_id del padre>`
+
 ### 2) Control de acceso por elemento de contenido
 Patrón aplicado: **metadatos de acceso en documentos embebidos**.
 
@@ -29,7 +58,7 @@ Razón:
 - Evita separar todo el temario en otra colección solo para resolver permisos.
 
 ### 3) Monetización con modelos complementarios
-Patrón aplicado: **separación de responsabilidades de negocio** (`SUSCRIPCIONES` y `COMPRAS_DE_CURSO`).
+Patrón aplicado: **separación de responsabilidades de negocio** (`SUSCRIPCIONES` y `USUARIOS_CURSOS`).
 
 Razón:
 - Se cubren dos vías de acceso: suscripción global y compra puntual.
@@ -60,6 +89,40 @@ Razón:
 - Mantiene continuidad con la solución base y reduce complejidad innecesaria.
 - Separa correctamente contenido embebido de catálogos y transacciones.
 
+## Demo ejecutable con TypeScript (Mongo + UI)
+
+Además del modelado, esta carpeta incluye una demo mínima para visualizar datos reales seed:
+
+- Servicio `mongo`: base de datos con inicialización automática.
+- Servicio `demo`: app Node.js + TypeScript + Express con interfaz web.
+
+### Arranque
+```bash
+docker compose up -d --build
+```
+
+> Importante: el script de inicialización (`mongo-init/01-init.js`) solo se ejecuta la primera vez que se crea el volumen de Mongo.
+> Si cambias el seed o el modelo y quieres reinicializar los datos, ejecuta:
+
+```bash
+docker compose down -v
+docker compose up -d --build
+```
+
+### URLs
+- Interfaz web: [http://localhost:3000](http://localhost:3000)
+- Healthcheck demo: [http://localhost:3000/health](http://localhost:3000/health)
+
+### Qué muestra la interfaz
+- Últimos 5 vídeos publicados por categoría (home).
+- Cursos por área.
+- Detalle de curso con vídeos/artículos y autor en vídeo.
+
+### Parada
+```bash
+docker compose down
+```
+
 ## Conclusión
 La parte opcional mantiene la estrategia documental del modelo base y añade capacidades de producto (jerarquía, permisos, monetización y analítica) sin sacrificar legibilidad ni rendimiento de lectura.
-Es una evolución incremental y defendible técnicamente para un portal e-learning real.
+La demo en TypeScript permite evidenciar de forma práctica el modelo y las consultas principales del enunciado.

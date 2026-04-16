@@ -1,0 +1,18 @@
+{
+  "name": "l1a-opcional-demo",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/server.ts"
+  },
+  "dependencies": {
+    "express": "latest",
+    "mongodb": "latest"
+  },
+  "devDependencies": {
+    "tsx": "latest",
+    "typescript": "latest",
+    "@types/express": "latest"
+  }
+}
