@@ -1,133 +1,62 @@
-# Laboratorio 1A - Modelado documental (Parte basica)
+# Laboratorio 1A - Modelado documental (Parte básica)
 
-## Objetivo
-Disenar un modelo documental para un portal de e-learning orientado a programacion, optimizado para lectura en:
+## Por qué se ha realizado este modelado
+Este modelado se ha diseñado para priorizar los escenarios de lectura que el enunciado marca como más frecuentes:
 
-- Inicio con listados por categoria.
-- Pagina de curso (curso + temario de videos).
-- Pagina de leccion (video + autor).
-- Pagina de autor (consulta menos frecuente).
+- Listados de cursos (últimos cursos y cursos por área).
+- Vista de detalle de curso con su temario.
+- Vista de lección con información de autor.
 
-## Colecciones
+Además, se han tenido en cuenta las restricciones funcionales del problema:
 
-### `categories`
-Catalogo de areas (Front End, Backend, DevOps, Otros).
+- Un curso contiene vídeos y artículos.
+- Un vídeo pertenece a un curso (no se comparte entre cursos en esta versión).
+- Los recursos pesados (vídeo y contenido de artículo) viven fuera de MongoDB (S3/CMS), por lo que en base de datos solo se guardan identificadores.
+- Los vídeos deben poder clasificarse por temáticas.
 
-Campos principales:
-- `_id`
-- `slug` (unico)
-- `nombre`
-- `creadoEn`, `actualizadoEn`
+Con este enfoque se minimizan consultas complejas para la navegación principal y se mantiene un modelo fácil de evolucionar.
 
-### `authors`
-Informacion del autor y su biografia (poco trafico comparado con curso/leccion).
+## Patrones aplicados y razonamiento
 
-Campos principales:
-- `_id`
-- `slug` (unico)
-- `nombreMostrado`
-- `bioCorta`
-- `urlAvatar`
-- `enlacesSociales[]`
-- `creadoEn`, `actualizadoEn`
+### 1) Agregado principal (`CURSOS`) con embebido
+Patrón aplicado: **agregado documental con embebido**.
 
-### `courses`
-Documento agregado principal. Incluye metadatos del curso y videos embebidos.
+Razón:
+- El usuario consume curso + temario como una unidad funcional.
+- El volumen por curso es acotado, por lo que `videos[]` y `articulos[]` embebidos son viables.
+- Se reduce la necesidad de joins en lecturas frecuentes.
 
-Campos principales:
-- `_id`
-- `slug` (unico)
-- `titulo`
-- `descripcionCorta`
-- `level`
-- `idCategoria` (ref -> `categories._id`)
-- `idContenidoCursoCms` (GUID/ID en CMS)
-- `publicadoEn`
-- `videos[]` (subdocumentos embebidos)
-- `creadoEn`, `actualizadoEn`
+### 2) Referencias a entidades compartidas
+Patrón aplicado: **referencias por id** a colecciones de catálogo y entidades reutilizables.
 
-### `cursosAutores`
-Coleccion intermedia para resolver la relacion entre cursos y autores sin M:M directa.
+Razón:
+- `AUTORES`, `CATEGORIAS` y `TEMATICAS` tienen ciclo de vida propio y se reutilizan en múltiples cursos.
+- Evita duplicación excesiva de datos de autor o catálogos.
+- Facilita mantenimiento y consistencia de información compartida.
 
-Campos principales:
-- `_id`
-- `idCurso` (ref -> `courses._id`)
-- `idAutor` (ref -> `authors._id`)
-- `rol`
-- `creadoEn`
+### 3) Relación muchos a muchos con colección intermedia
+Patrón aplicado: **colección puente** (`CURSOS_AUTORES`).
 
-Subdocumento `videos[]`:
-- `_id`
-- `orden`
-- `slug`
-- `titulo`
-- `resumen`
-- `idAutor` (ref -> `authors._id`)
-- `idRecursoVideo` (GUID/URL en S3 o CDN)
-- `idContenidoArticuloCms` (ID de contenido en CMS)
-- `publicadoEn`
-- `duracionSeg`
-- `estaPublicado`
+Razón:
+- Permite modelar la relación curso-autor sin una relación M:M directa en herramienta.
+- Facilita representar roles y metadatos de participación.
+- Hace explícita la vinculación en consultas y diagrama.
 
-## Patron de modelado y justificacion
+### 4) Referencias a recursos externos (S3/CMS)
+Patrón aplicado: **referencia a recursos externos** (guardar ids, no contenido).
 
-### Embebido en `courses.videos[]`
-Se aplica embebido para video/leccion porque:
-- Un video no se comparte entre cursos (segun enunciado).
-- La lectura "curso con sus videos" es muy frecuente.
-- El maximo de videos por curso es bajo (1..20), encaja perfectamente en un documento.
+Razón:
+- MongoDB no almacena binarios pesados ni contenido editorial completo en este caso.
+- Se cumple literalmente el enunciado (guardar solo identificadores a recursos externos).
+- Mejora coste y rendimiento al desacoplar almacenamiento de contenido.
 
-### Referencias a `authors`, `categories` y `cursosAutores`
-Se referencian entidades compartidas y con ciclo de vida propio:
-- `authors` se usa en varios cursos y paginas de autor.
-- `categories` se reutiliza para filtros y listados.
-- `cursosAutores` actua como tabla intermedia para vincular curso y autor.
+### 5) Optimización de lectura mediante índices
+Patrón aplicado: **índices orientados a patrones de consulta**.
 
-### Recursos externos (S3/CMS)
-Se guardan IDs de recursos (`idRecursoVideo`, `idContenidoArticuloCms`, `idContenidoCursoCms`) y no el contenido binario o texto largo, cumpliendo el enunciado.
+Razón:
+- Se han propuesto índices alineados con consultas reales (orden por publicación, filtro por categoría, filtro por temática y búsquedas por slug).
+- Reduce latencia en las rutas más usadas de la aplicación.
 
-## Consultas objetivo (parte basica)
-
-1. **Ultimos cursos publicados**
-- Coleccion: `courses`
-- Filtro: `publicadoEn <= now`
-- Orden: `publicadoEn DESC`
-- Limite: N
-
-2. **Cursos por area**
-- Coleccion: `courses`
-- Filtro: `idCategoria = ...`
-- Orden recomendado: `publicadoEn DESC`
-
-3. **Curso con sus videos**
-- Coleccion: `courses`
-- Filtro: `slug = ...` (o `_id`)
-- Proyeccion: campos del curso + `videos[]`
-
-4. **Mostrar autor en una leccion**
-- Obtener curso por `slug`.
-- Localizar video por `videos.slug` (o `videos._id`).
-- Resolver `videos.idAutor` contra `authors`.
-
-## Indices recomendados
-
-### `courses`
-- `{ slug: 1 }` unico
-- `{ publicadoEn: -1 }`
-- `{ idCategoria: 1, publicadoEn: -1 }`
-- `{ "videos.slug": 1 }` (multikey para busqueda por leccion)
-
-### `authors`
-- `{ slug: 1 }` unico
-
-### `categories`
-- `{ slug: 1 }` unico
-
-## Compensaciones asumidas
-- Duplicamos poco dato en `videos[]` para acelerar lectura en pagina de curso.
-- El detalle completo de autor se mantiene normalizado en `authors` para no propagar cambios de biografia o avatar.
-- Si en el futuro un video se compartiera entre cursos, se podria extraer `videos` a una coleccion independiente.
-
-## Entregable incluido
-- Diagrama: `diagrama.md`
-- Justificacion de modelado: este `README.md`
+## Conclusión
+El modelo prioriza rendimiento de lectura, simplicidad operativa y alineación con el enunciado.
+La decisión central es tratar el curso como agregado documental y combinar embebido (temario) con referencias (catálogos, autores y recursos externos).

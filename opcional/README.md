@@ -1,120 +1,65 @@
 # Laboratorio 1A - Modelado documental (Parte opcional)
 
-## Objetivo de la ampliacion
-Cubrir los requisitos opcionales y de desafio:
+## Por qué se ha realizado este modelado
+La ampliación opcional extiende el modelo básico para cubrir escenarios de negocio más avanzados sin perder el foco en lectura:
 
-- Jerarquia de areas (categorias en arbol).
-- Contenido publico/privado por curso y por video.
-- Usuarios con suscripcion y usuarios que compran cursos concretos.
-- Contabilizar visualizaciones de video y de curso (sin tiempo real estricto).
-- Ejemplo practico ejecutable con `docker compose up -d`.
+- Jerarquía de áreas.
+- Contenido público/privado.
+- Usuarios con suscripción y compra puntual de cursos.
+- Métricas de visualización no estrictamente en tiempo real.
 
-## Diseno opcional
+El objetivo es mantener una base coherente con la parte básica y añadir capacidades reales de monetización, control de acceso y analítica.
 
-### 1) Jerarquia de categorias
-Coleccion `categories` con estructura de arbol:
-- `idCategoriaPadre`: referencia al nodo padre (`null` en raices).
-- `slugsAncestros[]`: ruta precalculada para busquedas por rama.
-- `profundidad`: nivel jerarquico.
+## Patrones aplicados y razonamiento
 
-Ventaja: permite filtros como "Backend" incluyendo "Backend > Node.js > Express".
+### 1) Jerarquía de categorías
+Patrón aplicado: **patrón de árbol** con autorreferencia.
 
-### 2) Control de acceso
+Razón:
+- Permite representar árboles como `Front End > React > Testing`.
+- Escala mejor que una lista plana cuando crecen subáreas.
+- Facilita navegación por ramas y expansión futura del catálogo.
 
-#### En `courses`
-- `esPublico`: visibilidad global de curso.
+### 2) Control de acceso por elemento de contenido
+Patrón aplicado: **metadatos de acceso en documentos embebidos**.
 
-#### En `courses.videos[]`
-- `nivelAcceso`: `public` | `subscribers` | `purchased`
-- `esPublico`: atajo derivado util para filtros simples.
+Razón:
+- `videos[]` y `articulos[]` incorporan metadatos de acceso (`nivelAcceso`, `esPublico`).
+- Permite cursos mixtos (parte pública y parte privada).
+- Evita separar todo el temario en otra colección solo para resolver permisos.
 
-Regla de lectura recomendada:
-- Si `nivelAcceso=public`: siempre visible.
-- Si `subscribers`: visible con suscripcion activa.
-- Si `purchased`: visible si el usuario compro el curso (o tiene suscripcion, segun politica).
+### 3) Monetización con modelos complementarios
+Patrón aplicado: **separación de responsabilidades de negocio** (`SUSCRIPCIONES` y `COMPRAS_DE_CURSO`).
 
-### 3) Usuarios y monetizacion
+Razón:
+- Se cubren dos vías de acceso: suscripción global y compra puntual.
+- Mantiene trazabilidad histórica de derechos de acceso.
+- Facilita reglas de negocio claras sobre qué contenido puede ver cada usuario.
 
-#### `users`
-Datos basicos del usuario.
+### 4) Analítica agregada no real-time
+Patrón aplicado: **preagregación con contadores en caché**.
 
-#### `cursosAutores`
-Coleccion intermedia entre `courses` y `authors`.
+Razón:
+- `vistasVideosDiarias` modela histórico agregable por día.
+- Contadores caché en curso/vídeo/artículo reducen coste de consulta en front.
+- Cumple el requisito de no exigir cálculo en tiempo real exacto.
 
-#### `subscriptions`
-Historico de suscripciones (`active`, `cancelled`, `expired`).
+### 5) Colección intermedia para curso-autor
+Patrón aplicado: **colección puente** (`CURSOS_AUTORES`).
 
-#### `comprasCursos`
-Compras unitarias por curso.
+Razón:
+- Representa la relación de participación sin M:M directa.
+- Permite metadatos de participación (`rol`, fechas).
+- Es fácil de mapear en herramientas de modelado y en consultas.
 
-### 4) Metricas de visualizacion
+### 6) Reutilización del criterio documental de la parte básica
+Patrón aplicado: **agregado `CURSOS` como centro del dominio de lectura**.
 
-#### `vistasVideosDiarias`
-Acumulado por dia (`idCurso`, `idVideo`, `dia`, `vistas`).
+Razón:
+- Conserva el buen rendimiento en la página de curso.
+- Mantiene continuidad con la solución base y reduce complejidad innecesaria.
+- Separa correctamente contenido embebido de catálogos y transacciones.
 
-#### Cache en curso y video
-- `courses.vistasTotalesCache`
-- `courses.videos[].vistasCache`
-
-Se actualizan por proceso por lotes o trabajo periodico, suficiente para el requisito "sin tiempo real".
-
-## Indices recomendados (opcional)
-
-### `categories`
-- `{ slug: 1 }` unico
-- `{ idCategoriaPadre: 1, slug: 1 }`
-- `{ slugsAncestros: 1 }`
-
-### `courses`
-- `{ slug: 1 }` unico
-- `{ idCategoria: 1, publicadoEn: -1 }`
-- `{ esPublico: 1, publicadoEn: -1 }`
-- `{ "videos.slug": 1 }`
-- `{ "videos.nivelAcceso": 1 }`
-
-### `cursosAutores`
-- `{ idCurso: 1, idAutor: 1 }` unico
-- `{ idAutor: 1, idCurso: 1 }`
-
-### `users`
-- `{ email: 1 }` unico
-
-### `subscriptions`
-- `{ idUsuario: 1, estado: 1, terminaEn: -1 }`
-
-### `comprasCursos`
-- `{ idUsuario: 1, idCurso: 1 }` unico
-- `{ idCurso: 1, compradoEn: -1 }`
-
-### `vistasVideosDiarias`
-- `{ idCurso: 1, idVideo: 1, dia: 1 }` unico
-- `{ dia: -1 }`
-
-## Ejemplo practico con Docker
-
-Esta carpeta incluye:
-- `docker-compose.yml`
-- `mongo-init/01-init.js`
-
-Levanta un MongoDB con datos de ejemplo y los indices creados automaticamente en el arranque.
-
-### Arranque
-```bash
-docker compose up -d
-```
-
-### Comprobacion rapida
-```bash
-docker compose exec mongo mongosh -u appuser -p apppass --authenticationDatabase admin elearning --eval "db.courses.find({}, {titulo:1, title:1, slug:1, idCategoria:1, categoryId:1}).pretty()"
-```
-
-### Parada
-```bash
-docker compose down
-```
-
-## Evidencias sugeridas para la entrega
-- Captura de `docker compose ps`.
-- Captura de una consulta que devuelva curso + videos.
-- Captura de una consulta de control de acceso por usuario.
-- Enlace a esta carpeta en tu repositorio del laboratorio.
+## Conclusión
+La parte opcional mantiene la estrategia documental del modelo base y añade capacidades de producto (jerarquía, permisos, monetización y analítica) sin sacrificar legibilidad ni rendimiento de lectura.
+Es una evolución incremental y defendible técnicamente para un portal e-learning real.
